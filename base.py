@@ -68,20 +68,20 @@ loss_func = nn.MSELoss(size_average=False).cuda()
 def train():
     for epoch in range(EPOCH):
         for step, (data, target) in enumerate(train_loader):        # gives batch data
-            try:
-                data = data.view(-1, TIME_STEP, INPUT_SIZE)
-                output = rnn(data)
-                loss = loss_func(output, target)                   # cross entropy loss
-                optimizer.zero_grad()                           # clear gradients for this training step
-                loss.backward(retain_graph=True)                                 # backpropagation, compute gradients
-                optimizer.step()                                # apply gradients
-                if step % 10 == 0:
-                    print('Train Epoch:{}[{}/{} ({:.0f}%)]\tLoss:{:.6f}'.format(
-                        epoch, step * len(data), len(train_loader.dataset),
-                               100. * step / len(train_loader), loss.item()
-                    ))
-            except:
+            if data.shape[0] != BATCH:
                 continue
+            data = data.view(-1, TIME_STEP, INPUT_SIZE)
+
+            output = rnn(data)
+            loss = loss_func(output, target)                   # cross entropy loss
+            optimizer.zero_grad()                           # clear gradients for this training step
+            loss.backward(retain_graph=True)                                 # backpropagation, compute gradients
+            optimizer.step()                                # apply gradients
+            if step % 10 == 0:
+                print('Train Epoch:{}[{}/{} ({:.0f}%)]\tLoss:{:.6f}'.format(
+                    epoch, step * len(data), len(train_loader.dataset),
+                           100. * step / len(train_loader), loss.item()
+                ))
 
 
 if __name__ == "__main__":
