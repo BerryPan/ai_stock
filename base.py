@@ -6,8 +6,8 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-EPOCH = 1
-BATCH = 1
+EPOCH = 20
+BATCH = 256
 TIME_STEP = 1
 INPUT_SIZE = 5
 LR = 0.01
@@ -39,7 +39,7 @@ class DiabetesDataset(Dataset):
 class RNN(nn.Module):
     def __init__(self):
         super(RNN, self).__init__()
-        self.hidden_size = 10
+        self.hidden_size = BATCH
         self.rnn = nn.LSTM(
             input_size=INPUT_SIZE,
             hidden_size=self.hidden_size,  # rnn hidden unit
@@ -48,7 +48,7 @@ class RNN(nn.Module):
         )
         self.hidden = (torch.autograd.Variable(torch.zeros(1, BATCH, self.hidden_size)),
                        torch.autograd.Variable(torch.zeros(1, BATCH, self.hidden_size)))
-        self.out = nn.Linear(10, 1)
+        self.out = nn.Linear(256, 1)
 
     def forward(self, x):
         r_out, self.hidden= self.rnn(x, self.hidden)
@@ -57,9 +57,9 @@ class RNN(nn.Module):
 
 
 rnn = RNN()
-
+print(rnn)
 dataset = DiabetesDataset(filepath='train_data.csv')
-train_loader = DataLoader(dataset=dataset, batch_size=BATCH, shuffle=True)
+train_loader = DataLoader(dataset=dataset, batch_size=BATCH, shuffle=True, num_workers=4)
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LR, betas=(0.9, 0.99))
 loss_func = nn.MSELoss(size_average=False)
 
@@ -68,7 +68,7 @@ def train():
     for epoch in range(EPOCH):
         for step, (data, target) in enumerate(train_loader):        # gives batch data
             data, target = Variable(data), Variable(target)
-            data = data.view(BATCH, -1, INPUT_SIZE)
+            data = data.view(-1, TIME_STEP, INPUT_SIZE)
             output = rnn(data)
             loss = loss_func(output, target)                   # cross entropy loss
             optimizer.zero_grad()                           # clear gradients for this training step
@@ -80,6 +80,7 @@ def train():
                            100. * step / len(train_loader), loss.item()
                 ))
 
+if __name__ == "__main__":
+    train()
+    torch.save(rnn, 'net.pkl')  # 保存整个网络
 
-train()
-torch.save(rnn, 'net.pkl')  # 保存整个网络
