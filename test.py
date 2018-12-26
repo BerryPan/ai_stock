@@ -17,19 +17,19 @@ LR = 0.01
 class RNN(nn.Module):
     def __init__(self):
         super(RNN, self).__init__()
-        # self.hidden_size = 10
+        self.hidden_size = 10
         self.rnn = nn.LSTM(
-            input_size=4,
-            hidden_size=8,  # rnn hidden unit
+            input_size=INPUT_SIZE,
+            hidden_size=self.hidden_size,  # rnn hidden unit
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        # self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
-        #                torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
-        self.out = nn.Linear(8, 10)
+        self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
+                       torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
+        self.out = nn.Linear(10, 1)
 
     def forward(self, x):
-        r_out, self.hidden= self.rnn(x, None)
+        r_out, self.hidden= self.rnn(x, self.hidden)
         out = self.out(r_out[:, -1, :])
         return out
 

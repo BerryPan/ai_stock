@@ -9,23 +9,20 @@ from sklearn import preprocessing
 EPOCH = 1
 BATCH = 1
 TIME_STEP = 1
-INPUT_SIZE = 4
+INPUT_SIZE = 5
 LR = 0.01
 
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
         train = pd.read_csv(filepath)
-        volume = train['BidVolume1'] - train['AskVolume1']
         target_array = np.array(train[['MidPrice']])
         # target_array = preprocessing.scale(target_array)
         target = torch.tensor(target_array.astype(np.float32))
-        other = train[['AskPrice1', 'BidPrice1', 'Volume']]
-        volume = pd.DataFrame({'MidVolume': list(volume)})
-        data = pd.concat([other, volume], axis=1 )
+        data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
-        # for i in range(INPUT_SIZE):
-        #     data[:, i] = preprocessing.scale(data[:, i])
+        for i in range(INPUT_SIZE):
+            data[:, i] = preprocessing.scale(data[:, i])
         data = torch.tensor(data.astype(np.float32))
         self.len = data.shape[0]
         self.x_data = data
@@ -44,7 +41,7 @@ class RNN(nn.Module):
         super(RNN, self).__init__()
         self.hidden_size = 10
         self.rnn = nn.LSTM(
-            input_size=4,
+            input_size=INPUT_SIZE,
             hidden_size=self.hidden_size,  # rnn hidden unit
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
@@ -71,7 +68,7 @@ def train():
     for epoch in range(EPOCH):
         for step, (data, target) in enumerate(train_loader):        # gives batch data
             data, target = Variable(data), Variable(target)
-            data = data.view(-1, 1, 4)
+            data = data.view(-1, 1, INPUT_SIZE)
             output = rnn(data)
             loss = loss_func(output, target)                   # cross entropy loss
             optimizer.zero_grad()                           # clear gradients for this training step
