@@ -6,7 +6,6 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-
 EPOCH = 1
 BATCH = 10
 TIME_STEP = 10
@@ -17,19 +16,19 @@ LR = 0.01
 class RNN(nn.Module):
     def __init__(self):
         super(RNN, self).__init__()
-        self.hidden_size = 10
+        self.hidden_size = BATCH
         self.rnn = nn.LSTM(
             input_size=INPUT_SIZE,
             hidden_size=self.hidden_size,  # rnn hidden unit
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        # self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
-        #                torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
+        self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
+                       torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
         self.out = nn.Linear(10, 1)
 
     def forward(self, x):
-        r_out, self.hidden= self.rnn(x, None)
+        r_out, self.hidden= self.rnn(x, self.hidden)
         out = self.out(r_out[:, -1, :])
         return out
 
@@ -63,14 +62,17 @@ rnn = torch.load('net.pkl')
 
 test_data = DiabetesDataset(filepath='s.csv')
 test_loader = DataLoader(dataset=test_data, batch_size=BATCH, shuffle=False)
+f = open('123.csv', 'w')
+f.write('caseid,midprice\n')
 for step, (data, target) in enumerate(test_loader):  # gives batch data
     data, target = Variable(data), Variable(target)
-    data = data.view(-1, 1, 5)
+    data = data.view(-1, TIME_STEP, INPUT_SIZE)
     output = rnn(data)
     loss = loss_func(output, target)
     test_loss += loss_func(output, target).item()
     predicted = torch.max(output, 1)[0].data.numpy()
     print(predicted)
+    f.write(str(step+143)+','+str(predicted.mean())+'\n')
 test_loss /= len(test_loader.dataset)
 print('\nTest set:Average Loss:{:.6f}\n'.format(test_loss))
 
