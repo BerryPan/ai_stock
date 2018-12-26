@@ -46,8 +46,8 @@ class RNN(nn.Module):
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
-                       torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
+        self.hidden = (torch.autograd.Variable(torch.zeros(1, BATCH, self.hidden_size)),
+                       torch.autograd.Variable(torch.zeros(1, BATCH, self.hidden_size)))
         self.out = nn.Linear(10, 1)
 
     def forward(self, x):
@@ -68,7 +68,7 @@ def train():
     for epoch in range(EPOCH):
         for step, (data, target) in enumerate(train_loader):        # gives batch data
             data, target = Variable(data), Variable(target)
-            data = data.view(-1, 1, INPUT_SIZE)
+            data = data.view(BATCH, -1, INPUT_SIZE)
             output = rnn(data)
             loss = loss_func(output, target)                   # cross entropy loss
             optimizer.zero_grad()                           # clear gradients for this training step

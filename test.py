@@ -10,7 +10,7 @@ from sklearn import preprocessing
 EPOCH = 1
 BATCH = 10
 TIME_STEP = 10
-INPUT_SIZE = 4
+INPUT_SIZE = 5
 LR = 0.01
 
 
@@ -24,28 +24,23 @@ class RNN(nn.Module):
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
-                       torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
+        # self.hidden = (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)),
+        #                torch.autograd.Variable(torch.zeros(1, 1, self.hidden_size)))
         self.out = nn.Linear(10, 1)
 
     def forward(self, x):
-        r_out, self.hidden= self.rnn(x, self.hidden)
+        r_out, self.hidden= self.rnn(x, None)
         out = self.out(r_out[:, -1, :])
         return out
 
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
-        train = pd.read_csv(filepath).head(10)
-
-        volume = train['BidVolume1'] - train['AskVolume1']
+        train = pd.read_csv(filepath)
         target_array = np.array(train[['MidPrice']])
         # target_array = preprocessing.scale(target_array)
         target = torch.tensor(target_array.astype(np.float32))
-        print(target)
-        other = train[['AskPrice1', 'BidPrice1', 'Volume']]
-        volume = pd.DataFrame({'MidVolume': list(volume)})
-        data = pd.concat([other, volume], axis=1 )
+        data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
         for i in range(INPUT_SIZE):
             data[:, i] = preprocessing.scale(data[:, i])
@@ -53,6 +48,7 @@ class DiabetesDataset(Dataset):
         self.len = data.shape[0]
         self.x_data = data
         self.y_data = target
+        print(self.y_data.shape)
 
     def __getitem__(self, index):
         return self.x_data[index], self.y_data[index]
@@ -69,7 +65,7 @@ test_data = DiabetesDataset(filepath='s.csv')
 test_loader = DataLoader(dataset=test_data, batch_size=BATCH, shuffle=False)
 for step, (data, target) in enumerate(test_loader):  # gives batch data
     data, target = Variable(data), Variable(target)
-    data = data.view(-1, 1, 4)
+    data = data.view(-1, 1, 5)
     output = rnn(data)
     loss = loss_func(output, target)
     test_loss += loss_func(output, target).item()
@@ -77,4 +73,4 @@ for step, (data, target) in enumerate(test_loader):  # gives batch data
     print(predicted)
 test_loss /= len(test_loader.dataset)
 print('\nTest set:Average Loss:{:.6f}\n'.format(test_loss))
-print(predicted)
+
