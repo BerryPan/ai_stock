@@ -6,8 +6,8 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-EPOCH = 20
-BATCH = 64
+EPOCH = 2
+BATCH = 10
 TIME_STEP = 1
 INPUT_SIZE = 5
 LR = 0.01
@@ -15,10 +15,11 @@ LR = 0.01
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
-        train = pd.read_csv(filepath)
-        target_array = np.array(train[['MidPrice']])
+        midprice = pd.read_csv('midprice.csv')
+        target_array = np.array(midprice[['MidPrice']])
         # target_array = preprocessing.scale(target_array)
         target = torch.tensor(target_array.astype(np.float32))
+        train = pd.read_csv('train.csv')
         data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
         for i in range(INPUT_SIZE):
@@ -57,7 +58,6 @@ class RNN(nn.Module):
 
 
 rnn = RNN().cuda()
-# rnn = nn.DataParallel(rnn, device_ids=[0, 1])
 print(rnn)
 dataset = DiabetesDataset(filepath='train_data.csv')
 train_loader = DataLoader(dataset=dataset, batch_size=BATCH, shuffle=True)
