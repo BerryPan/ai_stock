@@ -16,12 +16,13 @@ for item in tag:
 print(data.shape)
 print(input_data[0].shape)
 while i * 30 < data.shape[0]:
-    target_f.write(str(midprice[i * 30 + 10:i * 30 + 29].mean()-midprice[i*30:i * 30 + 9].mean()) + '\n')
-    for j in range(5):
-        f.write(str(input_data[j][i * 30:i * 30 + 9].mean()))
-        if j == 4:
-            f.write('\n')
-        else:
-            f.write(',')
-
+    target_f.write(str(midprice[i * 30 + 10:i * 30 + 29].mean()-midprice[i * 30 + 9][0]) + '\n')
+    for m in range(10):
+        for j in range(5):
+            f.write(str(input_data[j][i * 30 + m][0]))
+            if j == 4:
+                f.write('\n')
+            else:
+                f.write(',')
+    print(i)
     i += 1
