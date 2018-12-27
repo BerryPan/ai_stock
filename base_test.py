@@ -8,8 +8,8 @@ from sklearn import preprocessing
 
 EPOCH = 1
 BATCH = 1
-TIME_STEP = 10
-INPUT_SIZE = 5
+TIME_STEP = 1
+INPUT_SIZE = 6
 LR = 0.01
 
 
@@ -35,27 +35,25 @@ class RNN(nn.Module):
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
-        train = pd.read_csv('test_target.csv')
-        target_array = np.array(train[['MidPrice']])
+        train = pd.read_csv(filepath)
         # target_array = preprocessing.scale(target_array)
+        target = pd.read_csv('test_target.csv')[['MidPrice']]
+        target = np.array(target).astype(np.float32)
+        volume = train['BidVolume1'] - train['AskVolume1']
+        # price = train['BidPrice1'] - train['AskPrice1']
+        other = train[['Volume', 'BidPrice1', 'AskPrice1', 'BidVolume1', 'AskVolume1']]
+        volume = pd.DataFrame({'MidVolume': list(volume)})
+        # price = pd.DataFrame({'Price': list(price)})
 
-        target = target_array.astype(np.float32)
-        for i in range(len(target)):
-            if target[i] > 0:
-                target[i] = 1
-            else:
-                target[i] = 0
-        # target_array = preprocessing.scale(target_array)
-        print(target)
-        target = torch.tensor(target)
-        train = pd.read_csv('test.csv')
-        data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
+        data = pd.concat([other, volume], axis=1)
+
         data = np.array(data)
         for i in range(INPUT_SIZE):
             data[:, i] = preprocessing.scale(data[:, i])
         data = torch.tensor(data.astype(np.float32))
         self.len = data.shape[0]
         self.x_data = data
+        self.y_data = target
         self.y_data = target
         print(self.y_data.shape)
 
@@ -70,7 +68,7 @@ test_loss = 0
 loss_func = nn.MSELoss(size_average=False)
 rnn = torch.load('net.pkl')
 
-test_data = DiabetesDataset(filepath='s.csv')
+test_data = DiabetesDataset(filepath='test.csv')
 test_loader = DataLoader(dataset=test_data, batch_size=BATCH, shuffle=False)
 f = open('123.csv', 'w')
 f.write('caseid,midprice\n')
@@ -79,7 +77,6 @@ for step, (data, target) in enumerate(test_loader):  # gives batch data
     data, target = Variable(data), Variable(target)
     data = data.view(-1, 1, INPUT_SIZE)
     output = rnn(data)
-    print(output)
     loss = loss_func(output, target)
     test_loss += loss_func(output, target).item()
     f.write(str(step+143)+','+str(output.item()+last_time[step][0])+'\n')

@@ -2,15 +2,14 @@ import torch
 import numpy as np
 import pandas as pd
 from torch import nn
-from torch.autograd import Variable
-import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
+import torch.nn.functional as F
 
 EPOCH = 5
 BATCH = 32
 TIME_STEP = 1
-INPUT_SIZE = 5
+INPUT_SIZE = 6
 LR = 0.01
 
 
@@ -36,6 +35,7 @@ class DiabetesDataset(Dataset):
         self.len = data.shape[0]
         self.x_data = data
         self.y_data = target
+        self.y_data = target
         print(self.y_data.shape)
 
     def __getitem__(self, index):
@@ -55,7 +55,7 @@ class RNN(nn.Module):
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        self.out = nn.Linear(BATCH, 2)
+        self.out = nn.Linear(BATCH, 1)
 
     def forward(self, x):
         self.hidden = (torch.zeros(1, BATCH, self.hidden_size),
@@ -67,7 +67,7 @@ class RNN(nn.Module):
 
 rnn = RNN()
 print(rnn)
-dataset = DiabetesDataset(filepath='train_data.csv')
+dataset = DiabetesDataset(filepath='train.csv')
 train_loader = DataLoader(dataset=dataset, batch_size=BATCH, shuffle=True)
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LR, betas=(0.9, 0.99))
 loss_func = nn.MSELoss(size_average=False)
