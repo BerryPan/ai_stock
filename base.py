@@ -6,8 +6,8 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-EPOCH = 2
-BATCH = 10
+EPOCH = 5
+BATCH = 32
 TIME_STEP = 1
 INPUT_SIZE = 5
 LR = 0.01
@@ -26,8 +26,8 @@ class DiabetesDataset(Dataset):
             data[:, i] = preprocessing.scale(data[:, i])
         data = torch.tensor(data.astype(np.float32))
         self.len = data.shape[0]
-        self.x_data = data.cuda()
-        self.y_data = target.cuda()
+        self.x_data = data
+        self.y_data = target
         print(self.y_data.shape)
 
     def __getitem__(self, index):
@@ -47,22 +47,22 @@ class RNN(nn.Module):
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        self.hidden = (torch.zeros(1, BATCH, self.hidden_size).cuda(),
-                       torch.zeros(1, BATCH, self.hidden_size).cuda())
         self.out = nn.Linear(BATCH, 1)
 
     def forward(self, x):
+        self.hidden = (torch.zeros(1, BATCH, self.hidden_size),
+                       torch.zeros(1, BATCH, self.hidden_size))
         r_out, self.hidden= self.rnn(x, self.hidden)
         out = self.out(r_out[:, -1, :])
         return out
 
 
-rnn = RNN().cuda()
+rnn = RNN()
 print(rnn)
 dataset = DiabetesDataset(filepath='train_data.csv')
 train_loader = DataLoader(dataset=dataset, batch_size=BATCH, shuffle=True)
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LR, betas=(0.9, 0.99))
-loss_func = nn.MSELoss(size_average=False).cuda()
+loss_func = nn.MSELoss(size_average=False)
 
 
 def train():
