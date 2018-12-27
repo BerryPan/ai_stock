@@ -6,9 +6,9 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-EPOCH = 5
+EPOCH = 3
 BATCH = 32
-TIME_STEP = 10
+TIME_STEP = 1
 INPUT_SIZE = 5
 LR = 0.01
 
@@ -21,6 +21,7 @@ class DiabetesDataset(Dataset):
         target = torch.tensor(target_array.astype(np.float32))
         train = pd.read_csv('train.csv')
         data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
+
         data = np.array(data)
         for i in range(INPUT_SIZE):
             data[:, i] = preprocessing.scale(data[:, i])
@@ -71,7 +72,6 @@ def train():
             if data.shape[0] != BATCH:
                 continue
             data = data.view(-1, TIME_STEP, INPUT_SIZE)
-
             output = rnn(data)
             loss = loss_func(output, target)                   # cross entropy loss
             optimizer.zero_grad()                           # clear gradients for this training step

@@ -8,7 +8,7 @@ from sklearn import preprocessing
 
 EPOCH = 1
 BATCH = 1
-TIME_STEP = 10
+TIME_STEP = 1
 INPUT_SIZE = 5
 LR = 0.01
 
@@ -68,7 +68,7 @@ f.write('caseid,midprice\n')
 last_time = np.array(pd.read_csv('last_time.csv'))
 for step, (data, target) in enumerate(test_loader):  # gives batch data
     data, target = Variable(data), Variable(target)
-    data = data.view(-1, 1, INPUT_SIZE)
+    data = data.view(-1, TIME_STEP, INPUT_SIZE)
     output = rnn(data)
     loss = loss_func(output, target)
     test_loss += loss_func(output, target).item()
