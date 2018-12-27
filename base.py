@@ -6,32 +6,21 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-EPOCH = 1
-BATCH = 64
-TIME_STEP = 1
-INPUT_SIZE = 4
+EPOCH = 5
+BATCH = 32
+TIME_STEP = 10
+INPUT_SIZE = 5
 LR = 0.01
 
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
-        train = pd.read_csv(filepath)
-        # midprice = pd.read_csv('midprice.csv')
-        # target_array = np.array(midprice[['MidPrice']])
-        # # target_array = preprocessing.scale(target_array)
-        # target = torch.tensor(target_array.astype(np.float32))
-        # train = pd.read_csv('train.csv')
-        target = train["MidPrice"]-train["MidPrice"].shift(1)
-        target = target.fillna(0)
-        target = np.array(target).astype(np.float32)
-
-        target = torch.tensor(target)
-        print(target)
-        volume = train['BidVolume1'] - train['AskVolume1']
-        other = train[['AskPrice1', 'BidPrice1', 'Volume']]
-        volume = pd.DataFrame({'MidVolume': list(volume)})
-        data = pd.concat([other, volume], axis=1)
-
+        midprice = pd.read_csv('midprice.csv')
+        target_array = np.array(midprice[['MidPrice']])
+        # target_array = preprocessing.scale(target_array)
+        target = torch.tensor(target_array.astype(np.float32))
+        train = pd.read_csv('train.csv')
+        data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
         for i in range(INPUT_SIZE):
             data[:, i] = preprocessing.scale(data[:, i])
@@ -82,6 +71,7 @@ def train():
             if data.shape[0] != BATCH:
                 continue
             data = data.view(-1, TIME_STEP, INPUT_SIZE)
+
             output = rnn(data)
             loss = loss_func(output, target)                   # cross entropy loss
             optimizer.zero_grad()                           # clear gradients for this training step
