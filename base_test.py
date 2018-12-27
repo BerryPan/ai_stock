@@ -23,7 +23,7 @@ class RNN(nn.Module):
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        self.out = nn.Linear(BATCH, 1)
+        self.out = nn.Linear(BATCH, 2)
 
     def forward(self, x):
         self.hidden = (torch.zeros(1, BATCH, self.hidden_size),
@@ -38,7 +38,16 @@ class DiabetesDataset(Dataset):
         train = pd.read_csv('test_target.csv')
         target_array = np.array(train[['MidPrice']])
         # target_array = preprocessing.scale(target_array)
-        target = torch.tensor(target_array.astype(np.float32))
+
+        target = target_array.astype(np.float32)
+        for i in range(len(target)):
+            if target[i] > 0:
+                target[i] = 1
+            else:
+                target[i] = 0
+        # target_array = preprocessing.scale(target_array)
+        print(target)
+        target = torch.tensor(target)
         train = pd.read_csv('test.csv')
         data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
@@ -70,6 +79,7 @@ for step, (data, target) in enumerate(test_loader):  # gives batch data
     data, target = Variable(data), Variable(target)
     data = data.view(-1, 1, INPUT_SIZE)
     output = rnn(data)
+    print(output)
     loss = loss_func(output, target)
     test_loss += loss_func(output, target).item()
     f.write(str(step+143)+','+str(output.item()+last_time[step][0])+'\n')

@@ -8,7 +8,7 @@ from sklearn import preprocessing
 
 EPOCH = 5
 BATCH = 32
-TIME_STEP = 10
+TIME_STEP = 1
 INPUT_SIZE = 5
 LR = 0.01
 
@@ -17,8 +17,15 @@ class DiabetesDataset(Dataset):
     def __init__(self, filepath):
         midprice = pd.read_csv('midprice.csv')
         target_array = np.array(midprice[['MidPrice']])
+        target = target_array.astype(np.float32)
+        for i in range(len(target)):
+            if target[i] > 0:
+                target[i] = 1
+            else:
+                target[i] = 0
         # target_array = preprocessing.scale(target_array)
-        target = torch.tensor(target_array.astype(np.float32))
+        print(target)
+        target = torch.tensor(target)
         train = pd.read_csv('train.csv')
         data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
@@ -47,7 +54,7 @@ class RNN(nn.Module):
             num_layers=1,  # 有几层 RNN layers
             batch_first=True,
         )
-        self.out = nn.Linear(BATCH, 1)
+        self.out = nn.Linear(BATCH, 2)
 
     def forward(self, x):
         self.hidden = (torch.zeros(1, BATCH, self.hidden_size),
