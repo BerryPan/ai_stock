@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from torch import nn
 from torch.autograd import Variable
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
