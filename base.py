@@ -8,7 +8,7 @@ from sklearn import preprocessing
 
 EPOCH = 5
 BATCH = 32
-TIME_STEP = 1
+TIME_STEP = 10
 INPUT_SIZE = 5
 LR = 0.01
 

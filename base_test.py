@@ -35,10 +35,11 @@ class RNN(nn.Module):
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
-        train = pd.read_csv(filepath)
+        train = pd.read_csv('test_target.csv')
         target_array = np.array(train[['MidPrice']])
         # target_array = preprocessing.scale(target_array)
         target = torch.tensor(target_array.astype(np.float32))
+        train = pd.read_csv('test.csv')
         data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
         data = np.array(data)
         for i in range(INPUT_SIZE):
@@ -64,19 +65,14 @@ test_data = DiabetesDataset(filepath='s.csv')
 test_loader = DataLoader(dataset=test_data, batch_size=BATCH, shuffle=False)
 f = open('123.csv', 'w')
 f.write('caseid,midprice\n')
+last_time = np.array(pd.read_csv('last_time.csv'))
 for step, (data, target) in enumerate(test_loader):  # gives batch data
-    if step%10 == 9:
-        data, target = Variable(data), Variable(target)
-        data = data.view(-1, 1, INPUT_SIZE)
-        output = rnn(data)
-        loss = loss_func(output, target)
-        print(output)
-        print(target)
-        print(loss)
-        test_loss += loss_func(output, target).item()
-        predicted = torch.max(output, 1)[0].data.numpy()
-        print(predicted)
-        f.write(str(step+143)+','+str(predicted[-1])+'\n')
+    data, target = Variable(data), Variable(target)
+    data = data.view(-1, 1, INPUT_SIZE)
+    output = rnn(data)
+    loss = loss_func(output, target)
+    test_loss += loss_func(output, target).item()
+    f.write(str(step+143)+','+str(output.item()+last_time[step][0])+'\n')
 test_loss /= len(test_loader.dataset)
 print('\nTest set:Average Loss:{:.6f}\n'.format(test_loss))
 
