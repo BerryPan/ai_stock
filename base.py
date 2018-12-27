@@ -6,21 +6,31 @@ from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from sklearn import preprocessing
 
-EPOCH = 3
-BATCH = 32
+EPOCH = 1
+BATCH = 64
 TIME_STEP = 1
-INPUT_SIZE = 5
+INPUT_SIZE = 4
 LR = 0.01
 
 
 class DiabetesDataset(Dataset):
     def __init__(self, filepath):
-        midprice = pd.read_csv('midprice.csv')
-        target_array = np.array(midprice[['MidPrice']])
-        # target_array = preprocessing.scale(target_array)
-        target = torch.tensor(target_array.astype(np.float32))
-        train = pd.read_csv('train.csv')
-        data = train[['AskPrice1', 'BidPrice1', 'Volume', 'BidVolume1', 'AskVolume1']]
+        train = pd.read_csv(filepath)
+        # midprice = pd.read_csv('midprice.csv')
+        # target_array = np.array(midprice[['MidPrice']])
+        # # target_array = preprocessing.scale(target_array)
+        # target = torch.tensor(target_array.astype(np.float32))
+        # train = pd.read_csv('train.csv')
+        target = train["MidPrice"]-train["MidPrice"].shift(1)
+        target = target.fillna(0)
+        target = np.array(target).astype(np.float32)
+
+        target = torch.tensor(target)
+        print(target)
+        volume = train['BidVolume1'] - train['AskVolume1']
+        other = train[['AskPrice1', 'BidPrice1', 'Volume']]
+        volume = pd.DataFrame({'MidVolume': list(volume)})
+        data = pd.concat([other, volume], axis=1)
 
         data = np.array(data)
         for i in range(INPUT_SIZE):
